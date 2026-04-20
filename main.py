@@ -2,8 +2,8 @@ from aiogram import Bot, Dispatcher, Router, F
 import asyncio 
 import os
 from dotenv import load_dotenv 
-from keyboardsHelper import reply_kb, full_kb, main_kb
-from aiogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery, ReplyKeyboardMarkup,KeyboardButton, ReplyKeyboardRemove
+from keyboardsHelper import reply_kb, main_kb, back_remind_main
+from aiogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery, ReplyKeyboardMarkup,KeyboardButton, ReplyKeyboardRemove, FSInputFile
 from aiogram.filters import CommandStart 
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.fsm.context import FSMContext
@@ -38,24 +38,21 @@ async def main() -> None:
 async def cmd_help(message: Message, state: FSMContext) -> None:
     await message.delete()
     
-    # Удаляем предыдущее сообщение бота, если оно есть
     data = await state.get_data()
     if 'help_message_id' in data:
         try:
-            await message.bot.delete_message(message.chat.id, data['help_message_id'])
+            await message.bot.delete_message(message.chat.id, data == ['help_message_id'])
         except:
-            pass  # Сообщение уже могло быть удалено
+            pass  
     
-    # Отправляем новое сообщение и сохраняем его ID
     sent_message = await message.answer("КОМАНДЫ:\n/remind - взаимодействие с напоминаниями \n/secretchat - отправить секретное сообщение\n/Secretary - калькулятор и счетчик финансов\n/timer - установить таймер", reply_markup=main_kb)
     await state.update_data(help_message_id=sent_message.message_id)
     await state.set_state(BotStates.help_message_sent)
 
-@router.message(F.text == "/remind")
+@router.message(F.text.in_(["/remind", "Напоминание"]))
 async def message_remind(message: Message, state: FSMContext) -> None:
     await message.delete()
     
-    # Удаляем сообщение с командами, если оно есть
     data = await state.get_data()
     if 'help_message_id' in data:
         try:
@@ -64,7 +61,10 @@ async def message_remind(message: Message, state: FSMContext) -> None:
             pass
         await state.update_data(help_message_id=None)
     
-    await message.answer("Выберите действие:", reply_markup=reminderbuttons.inline_kb)
+    await message.answer("Выберите действие:", reply_markup = reminderbuttons.inline_kb)
+    photo = FSInputFile("/home/gin/bottg/photo/photo_2026-04-20_06-27-21.jpg")
+    await message.answer_photo(photo=photo, reply_markup=reply_kb)
+   
 
 
 if __name__ == "__main__":  

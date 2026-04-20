@@ -8,10 +8,8 @@ reply_kb = ReplyKeyboardMarkup (
  ],
    resize_keyboard =True
 )
-
-full_kb = ReplyKeyboardMarkup(
+main_kb = ReplyKeyboardMarkup(
     keyboard=[
-        [KeyboardButton(text="список команд")],
         [
             KeyboardButton(text="Секретный чат"),
             KeyboardButton(text="Напоминание"),
@@ -23,18 +21,10 @@ full_kb = ReplyKeyboardMarkup(
     ],
     resize_keyboard=True
 )
-
-# Клавиатура без кнопки "список команд" - только основные функции
-main_kb = ReplyKeyboardMarkup(
+back_remind_main = ReplyKeyboardMarkup(
     keyboard=[
-        [
-            KeyboardButton(text="Секретный чат"),
-            KeyboardButton(text="Напоминание"),
-        ],
-        [
-            KeyboardButton(text="секретарь"),
-            KeyboardButton(text="таймер")
-        ]
+        [KeyboardButton(text="Напоминание")],
+        
     ],
     resize_keyboard=True
 )
