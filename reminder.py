@@ -41,10 +41,14 @@ async def list_reminders_callback(callback: CallbackQuery):
            else:
              answ = "Загружено, ваш список: \n\n"
              for i, reminder in enumerate(reminders, 1):
-               moscow_tz = pytz.timezone('Europe/Moscow')
-               local_time = reminder.created_at.replace(tzinfo=pytz.utc).astimezone(moscow_tz)
+               if reminder.created_at:
+                   moscow_tz = pytz.timezone('Europe/Moscow')
+                   local_time = reminder.created_at.replace(tzinfo=pytz.utc).astimezone(moscow_tz)
+                   time_str = f"   (Создано: {local_time.strftime('%d.%m.%Y %H:%M')})\n\n"
+               else:
+                   time_str = "   (Дата создания неизвестна)\n\n"
                answ += f"{i}. {reminder.text}\n"
-               answ += f"   (Создано: {local_time.strftime('%d.%m.%Y %H:%M')})\n\n"           
+               answ += time_str           
            await callback.message.answer(answ)
 
        except Exception as ex:

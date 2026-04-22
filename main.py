@@ -9,6 +9,8 @@ from aiogram.fsm.state import State, StatesGroup
 from aiogram.fsm.context import FSMContext
 from config import router
 from reminder import reminderbuttons 
+import secretchat  
+from database import SessionLocal, User
 load_dotenv()
 
 class BotStates(StatesGroup):
@@ -23,6 +25,24 @@ async def cmd_start(message: Message) -> None:
        name = f"{first_name} {last_name}"
    else:
        name = first_name
+   
+   db = SessionLocal()
+   try:
+       existing_user = db.query(User).filter(User.user_id == message.from_user.id).first()
+       if not existing_user:
+           new_user = User(
+               user_id=message.from_user.id,
+               username=message.from_user.username,
+               first_name=message.from_user.first_name,
+               last_name=message.from_user.last_name
+           )
+           db.add(new_user)
+           db.commit()
+   except Exception as e:
+       db.rollback()
+       print(f"Error saving user: {e}")
+   finally:
+       db.close()
    
    await message.answer(f"Привет, {name}! Я - твой бот, который поможет тебе с различными задачами. Чем я могу помочь тебе сегодня? Напиши /help или нажми на кнопку ниже.", reply_markup=reply_kb)
 async def main() -> None:
