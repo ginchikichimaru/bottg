@@ -28,3 +28,12 @@ back_remind_main = ReplyKeyboardMarkup(
     ],
     resize_keyboard=True
 )
+
+secretary_kb = ReplyKeyboardMarkup(keyboard=[
+    [KeyboardButton(text="Потратить")],
+    [KeyboardButton(text="Добавить доход")],
+    [KeyboardButton(text="Установить цель")],
+    [KeyboardButton(text= "История")],
+    [KeyboardButton(text="Мой баланс")],
+    [KeyboardButton(text="Назад")]
+], resize_keyboard=True)

@@ -3,6 +3,7 @@ from aiogram.fsm.state import State, StatesGroup
 from aiogram.fsm.context import FSMContext
 import asyncio
 import os
+from keyboardsHelper import main_kb
 from aiogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery
 from aiogram.filters import CommandStart
 from config import router
@@ -91,4 +92,4 @@ async def process_secret_message(message: Message, state: FSMContext, bot: Bot):
 async def secret_chat_back(callback: CallbackQuery, state: FSMContext):
     await state.clear()
     await callback.message.delete()
-    await callback.message.answer("КОМАНДЫ:\n/remind - взаимодействие с напоминаниями \n/secretchat - отправить секретное сообщение\n/Secretary - калькулятор и счетчик финансов\n/timer - установить таймер")
+    await callback.message.answer("КОМАНДЫ:\n/remind - взаимодействие с напоминаниями \n/secretchat - отправить секретное сообщение\n/Secretary - калькулятор и счетчик финансов\n/timer - установить таймер", reply_markup=main_kb)
