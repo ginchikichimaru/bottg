@@ -55,38 +55,49 @@ async def process_user_id(message: Message, state: FSMContext):
 
 @router.message(SecretChatStates.Waiting_for_message)
 async def process_secret_message(message: Message, state: FSMContext, bot: Bot):
-    secret_text = message.text.strip()
-    if not secret_text:
-        await message.answer("Сообщение не может быть пустым!")
+    text = message.text.strip() if message.text else None
+    photo_file_id = None
+    photo_caption = None
+
+    if message.photo:
+        
+        photo_file_id = message.photo[-1].file_id
+        photo_caption = message.caption.strip() if message.caption else None
+
+    if not text and not photo_file_id:
+        await message.answer("Сообщение не может быть пустым — пришлите текст или фото.")
         return
 
     data = await state.get_data()
     to_user_id = data.get('to_user_id')
 
-    # Сохранить в БД
     db = SessionLocal()
     try:
         new_message = SecretMessage(
             from_user_id=message.from_user.id,
             to_user_id=to_user_id,
-            message=secret_text
+            message=text,
+            photo_file_id=photo_file_id,
+            photo_caption=photo_caption
         )
         db.add(new_message)
         db.commit()
 
-        # Отправить сообщение
+        
         try:
-            await bot.send_message(chat_id=to_user_id, text=f"Секретное сообщение: {secret_text}")
+            if photo_file_id:
+                await bot.send_photo(chat_id=to_user_id, photo=photo_file_id, caption=photo_caption or text or "Секретное фото")
+            else:
+                await bot.send_message(chat_id=to_user_id, text=f"Секретное сообщение: {text}")
             await message.answer("Секретное сообщение отправлено!")
         except Exception as e:
-            await message.answer(f"Не удалось отправить сообщение: {str(e)}")
+            await message.answer(f"Не удалось отправить сообщение: {e}")
     except Exception as e:
         db.rollback()
-        await message.answer(f"Ошибка сохранения: {str(e)}")
+        await message.answer(f"Ошибка сохранения: {e}")
     finally:
         db.close()
-
-    await state.clear()
+        await state.clear()
 
 @router.callback_query(F.data == "secret_chat_back")
 async def secret_chat_back(callback: CallbackQuery, state: FSMContext):
