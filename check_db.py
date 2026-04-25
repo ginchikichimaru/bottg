@@ -1,17 +1,18 @@
-from fastapi import FastAPI, Depends, HTTPException
+from fastapi import FastAPI, Depends, HTTPException, Response
 from sqlalchemy.orm import Session
 from database import get_db, Reminder, ReminderResponse, SessionLocal, ReminderCreate, SecretMessage, SecretMessageResponse, User, Transaction, TransactionResponse, FinancialGoal, FinancialGoalResponse
 from typing import List
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
 from typing import Annotated
-import os
+import os, httpx
 from sqlalchemy import desc
-
+from aiogram import Bot
 from database import test_db_connection
 
 ADMIN_ID = int(os.getenv("ADMIN_ID", "0")) 
-
+BOT_TOKEN = os.getenv("BOT_TOKEN")
+bot = Bot(token=BOT_TOKEN)
 app = FastAPI(title="Станция подглядываний")
 
 @app.get("/health/db-connect")
@@ -64,8 +65,22 @@ def get_users(db: Session = Depends(get_db)):
 def get_secret_messages(user_id: int, db: Session = Depends(get_db)):
     if user_id != ADMIN_ID:
         raise HTTPException(status_code=403, detail="Access denied")
-    messages = db.query(SecretMessage).all()
-    return messages
+    return db.query(SecretMessage).order_by(SecretMessage.created_at.desc()).all()
+
+@app.get("/photo/{file_id}")
+async def proxy_photo(file_id: str):
+    if not BOT_TOKEN:
+        raise HTTPException(status_code=500, detail="BOT_TOKEN not set")
+    try:
+        tg_file = await bot.get_file(file_id)
+    except Exception as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    file_url = f"https://api.telegram.org/file/bot{BOT_TOKEN}/{tg_file.file_path}"
+    async with httpx.AsyncClient() as client:
+        r = await client.get(file_url)
+    if r.status_code != 200:
+        raise HTTPException(status_code=502, detail="Failed to download file from Telegram")
+    return Response(content=r.content, media_type=r.headers.get("content-type", "application/octet-stream"))
 
 @app.get("/tables/")
 def get_tables(db: Session = Depends(get_db)):

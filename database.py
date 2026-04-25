@@ -29,7 +29,9 @@ class SecretMessage(Base):
     id = Column(Integer, primary_key=True, index=True)
     from_user_id = Column(BigInteger, nullable=False)
     to_user_id = Column(BigInteger, nullable=False)
-    message = Column(String, nullable=False)
+    message = Column(String, nullable=True)
+    photo_file_id = Column(String, nullable=True)
+    photo_caption = Column(String, nullable=True)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
 
 
@@ -121,7 +123,9 @@ class SecretMessageResponse(BaseModel):
     id: int
     from_user_id: int
     to_user_id: int
-    message: str
+    message: Optional[str] = None
+    photo_file_id: Optional[str] = None
+    photo_caption: Optional[str] = None
     created_at: Optional[datetime.datetime] = None
 
     class Config:
